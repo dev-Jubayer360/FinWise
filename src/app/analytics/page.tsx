@@ -29,7 +29,7 @@ export default function Analytics() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const res = await fetch("http://localhost:5000/api/dashboard", {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/dashboard`, {
           credentials: "include",
         });
         const json = await res.json();

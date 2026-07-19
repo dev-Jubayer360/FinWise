@@ -61,7 +61,7 @@ export default function Transactions() {
   const fetchTransactions = async () => {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:5000/api/transactions", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/transactions`, {
         credentials: "include",
       });
       const json = await res.json();
@@ -120,7 +120,7 @@ export default function Transactions() {
   const confirmDelete = async () => {
     if (!toDelete) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/transactions/${toDelete}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/transactions/${toDelete}`, {
         method: "DELETE",
         credentials: "include",
       });

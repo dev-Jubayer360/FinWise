@@ -85,7 +85,7 @@ export default function AddTransaction() {
     if (!title) return toast.info("Add a title first");
     setPredicting(true);
     try {
-      const res = await fetch("http://localhost:5000/api/ai/categorize", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/ai/categorize`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -111,7 +111,7 @@ export default function AddTransaction() {
 
   const onSubmit = async (data: any) => {
     try {
-      const res = await fetch("http://localhost:5000/api/transactions", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/transactions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

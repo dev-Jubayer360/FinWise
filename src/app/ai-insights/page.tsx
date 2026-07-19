@@ -62,7 +62,7 @@ function ChatPanel() {
     setStreaming(true);
 
     try {
-      const res = await fetch("http://localhost:5000/api/ai/chat", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/ai/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -150,7 +150,7 @@ function ReportPanel() {
   const generate = async () => {
     setGenerating(true);
     try {
-      const res = await fetch("http://localhost:5000/api/ai/analyze", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/ai/analyze`, {
         method: "POST",
         credentials: "include"
       });
