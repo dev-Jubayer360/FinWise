@@ -17,7 +17,7 @@ export function Footer() {
             Track smarter. Save better. Personal finance intelligence powered by AI.
           </p>
           <div className="mt-5 flex gap-3 text-sm font-medium text-muted-foreground">
-            <a href="#" aria-label="Twitter" className="hover:text-foreground">Twitter</a>
+            <a href="#" aria-label="Facebook" className="hover:text-foreground">Facebook</a>
             <a href="#" aria-label="GitHub" className="hover:text-foreground">GitHub</a>
             <a href="#" aria-label="LinkedIn" className="hover:text-foreground">LinkedIn</a>
           </div>
