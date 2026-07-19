@@ -17,9 +17,9 @@ export function Footer() {
             Track smarter. Save better. Personal finance intelligence powered by AI.
           </p>
           <div className="mt-5 flex gap-3 text-sm font-medium text-muted-foreground">
-            <a href="https://www.facebook.com/jubayer.info360" aria-label="Facebook" className="hover:text-foreground">Facebook</a>
-            <a href="https://github.com/dev-Jubayer360" aria-label="GitHub" className="hover:text-foreground">GitHub</a>
-            <a href="https://www.linkedin.com/in/pro-jubayer/" aria-label="LinkedIn" className="hover:text-foreground">LinkedIn</a>
+            <a href="https://www.facebook.com/jubayer.info360" aria-label="Facebook" target="_blank" rel="noopener noreferrer" className="hover:text-foreground">Facebook</a>
+            <a href="https://github.com/dev-Jubayer360" aria-label="GitHub" target="_blank" rel="noopener noreferrer" className="hover:text-foreground">GitHub</a>
+            <a href="https://www.linkedin.com/in/pro-jubayer/" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer" className="hover:text-foreground">LinkedIn</a>
           </div>
         </div>
         <FooterCol title="Product" links={[
