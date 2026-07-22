@@ -38,6 +38,7 @@ type FormValues = z.infer<typeof schema>;
 
 export default function AddTransaction() {
   const router = useRouter();
+  const [categories, setCategories] = useState(CATEGORIES);
   const { register, handleSubmit, control, reset, watch, setValue, formState: { errors, isSubmitting } } = useForm<FormValues>({
     // @ts-expect-error Type mismatch with zod coerce and react-hook-form
     resolver: zodResolver(schema),
@@ -71,13 +72,18 @@ export default function AddTransaction() {
       if (!res.ok) throw new Error(data.message || "Failed to predict");
       
       const p = data.data;
+      const suggested = p.suggestedCategory;
+      if (!categories.some(c => c.name.toLowerCase() === suggested.toLowerCase())) {
+        setCategories(prev => [...prev, { name: suggested, icon: "✨", color: "oklch(0.7 0.15 30)" }]);
+      }
+      
       setPrediction({
-        category: p.suggestedCategory,
+        category: suggested,
         tags: p.tags || [],
         priority: p.priority?.toLowerCase() || "medium",
         confidence: (p.confidenceScore || 85) / 100
       });
-      setValue("category", p.suggestedCategory, { shouldValidate: true });
+      setValue("category", suggested, { shouldValidate: true });
     } catch (err: any) {
       toast.error("Failed to predict category");
     } finally {
@@ -176,7 +182,7 @@ export default function AddTransaction() {
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger className="mt-1.5"><SelectValue placeholder="Pick or use AI" /></SelectTrigger>
                       <SelectContent>
-                        {CATEGORIES.map((c) => <SelectItem key={c.name} value={c.name}>{c.icon} {c.name}</SelectItem>)}
+                        {categories.map((c) => <SelectItem key={c.name} value={c.name}>{c.icon} {c.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   )}
