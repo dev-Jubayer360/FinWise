@@ -31,12 +31,12 @@ export default function Login() {
     });
     
     if (error) {
-      toast.error(error.message || "Failed to log in");
+      toast.error("Wrong password or email");
       return;
     }
     
     toast.success("Welcome back!");
-    router.push("/dashboard");
+    window.location.href = "/dashboard";
   };
 
   const handleGoogleLogin = async () => {
