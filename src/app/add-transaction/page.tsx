@@ -256,7 +256,7 @@ export default function AddTransaction() {
                   <div>
                     <p className="text-xs text-muted-foreground">Tags</p>
                     <div className="mt-1 flex flex-wrap gap-1">
-                      {prediction.tags.map((t) => <Badge key={t} variant="outline">#{t}</Badge>)}
+                      {prediction.tags.map((t: string) => <Badge key={t} variant="outline">#{t}</Badge>)}
                     </div>
                   </div>
                 )}
