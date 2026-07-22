@@ -31,33 +31,10 @@ const schema = z.object({
   date: z.string().min(1),
   method: z.enum(["card", "cash", "bank", "wallet"]),
   notes: z.string().max(500).optional(),
-  receiptUrl: z.string().url("Enter a valid URL").optional().or(z.literal("")),
 });
 type FormValues = z.infer<typeof schema>;
 
-// Mock AI category prediction. In production this would call Gemini via server fn.
-function predictCategory(text: string): { category: string; tags: string[]; priority: "low" | "medium" | "high"; confidence: number } {
-  const t = text.toLowerCase();
-  const rules: [RegExp, string][] = [
-    [/uber|lyft|taxi|gas|fuel|metro|bus|train/, "Transport"],
-    [/whole foods|grocery|restaurant|coffee|starbucks|dinner|lunch|food/, "Food & Dining"],
-    [/rent|mortgage|lease/, "Housing"],
-    [/electric|water|gas bill|internet|utility|utilities/, "Utilities"],
-    [/amazon|shop|store|apparel/, "Shopping"],
-    [/netflix|spotify|movie|concert|game/, "Entertainment"],
-    [/doctor|pharmacy|gym|health/, "Health"],
-    [/course|udemy|coursera|book|school|education/, "Education"],
-    [/flight|hotel|airbnb|travel|trip/, "Travel"],
-    [/salary|payroll|paycheck/, "Salary"],
-    [/freelance|invoice|client/, "Freelance"],
-    [/dividend|interest|stock|etf|investment/, "Investments"],
-  ];
-  for (const [re, cat] of rules) if (re.test(t)) {
-    const tags = t.split(/\s+/).filter((w) => w.length > 3).slice(0, 3);
-    return { category: cat, tags, priority: /rent|mortgage|utility|salary/.test(t) ? "high" : /coffee|snack/.test(t) ? "low" : "medium", confidence: 0.86 + Math.random() * 0.1 };
-  }
-  return { category: "Shopping", tags: [], priority: "medium", confidence: 0.55 };
-}
+
 
 export default function AddTransaction() {
   const router = useRouter();
@@ -72,11 +49,10 @@ export default function AddTransaction() {
       date: new Date().toISOString().slice(0, 10),
       method: "card",
       notes: "",
-      receiptUrl: "",
     },
   });
 
-  const [prediction, setPrediction] = useState<ReturnType<typeof predictCategory> | null>(null);
+  const [prediction, setPrediction] = useState<any>(null);
   const [predicting, setPredicting] = useState(false);
   const title = watch("title");
   const notes = watch("notes");
@@ -122,8 +98,7 @@ export default function AddTransaction() {
           category: data.category,
           paymentMethod: data.method,
           transactionDate: data.date,
-          notes: data.notes,
-          receiptImage: data.receiptUrl
+          notes: data.notes
         })
       });
       
@@ -233,11 +208,6 @@ export default function AddTransaction() {
               <Textarea id="notes" rows={3} className="mt-1.5" {...register("notes")} />
             </div>
 
-            <div>
-              <Label htmlFor="receipt">Receipt image URL (optional)</Label>
-              <Input id="receipt" placeholder="https://..." className="mt-1.5" {...register("receiptUrl")} />
-              {errors.receiptUrl && <p className="mt-1 text-xs text-destructive">{errors.receiptUrl.message}</p>}
-            </div>
 
             <div className="flex gap-2 pt-2">
               <Button type="submit" disabled={isSubmitting} className="gradient-primary text-primary-foreground">

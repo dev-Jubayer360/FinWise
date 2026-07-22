@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -12,6 +13,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -53,6 +60,8 @@ export default function Transactions() {
   const [sort, setSort] = useState("newest");
   const [page, setPage] = useState(1);
   const [toDelete, setToDelete] = useState<string | null>(null);
+  const [viewingTx, setViewingTx] = useState<any>(null);
+  const [editingTx, setEditingTx] = useState<any>(null);
 
   useEffect(() => {
     fetchTransactions();
@@ -259,11 +268,11 @@ export default function Transactions() {
                               <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />}>
                                 <MoreHorizontal className="h-4 w-4" />
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => toast.info(`Viewing ${t.title}`)}><Eye className="mr-2 h-4 w-4" /> View</DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => toast.info("Edit UI ready")}><Pencil className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => setToDelete(t._id)} className="text-destructive"><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem>
-                              </DropdownMenuContent>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => setViewingTx(t)}><Eye className="mr-2 h-4 w-4" /> View</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => setEditingTx(t)}><Pencil className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => setToDelete(t._id)} className="text-destructive"><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem>
+                                </DropdownMenuContent>
                             </DropdownMenu>
                           </TableCell>
                         </TableRow>
@@ -299,6 +308,168 @@ export default function Transactions() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* View Dialog */}
+      <Dialog open={!!viewingTx} onOpenChange={(o) => !o && setViewingTx(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Transaction Details</DialogTitle>
+          </DialogHeader>
+          {viewingTx && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <span className="font-semibold text-right text-sm">Title</span>
+                <span className="col-span-3">{viewingTx.title}</span>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <span className="font-semibold text-right text-sm">Amount</span>
+                <span className={`col-span-3 font-semibold ${viewingTx.type === 'income' ? 'text-success' : 'text-destructive'}`}>
+                  {viewingTx.type === 'income' ? '+' : '-'}${viewingTx.amount.toFixed(2)}
+                </span>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <span className="font-semibold text-right text-sm">Date</span>
+                <span className="col-span-3">{new Date(viewingTx.transactionDate).toLocaleDateString()}</span>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <span className="font-semibold text-right text-sm">Category</span>
+                <span className="col-span-3"><Badge variant="secondary">{viewingTx.category}</Badge></span>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <span className="font-semibold text-right text-sm">Method</span>
+                <span className="col-span-3 capitalize">{viewingTx.paymentMethod || 'Cash'}</span>
+              </div>
+              {viewingTx.notes && (
+                <div className="grid grid-cols-4 items-start gap-4">
+                  <span className="font-semibold text-right text-sm">Notes</span>
+                  <span className="col-span-3 text-sm text-muted-foreground">{viewingTx.notes}</span>
+                </div>
+              )}
+            </div>
+          )}
+          <div className="flex justify-end">
+            <Button variant="outline" onClick={() => setViewingTx(null)}>Close</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      {editingTx && (
+        <EditTransactionDialog
+          tx={editingTx}
+          onClose={() => setEditingTx(null)}
+          onSave={(updated) => {
+            setRows((prev) => prev.map((t) => t._id === updated._id ? { ...t, ...updated } : t));
+            setEditingTx(null);
+          }}
+        />
+      )}
     </>
+  );
+}
+
+function EditTransactionDialog({ tx, onClose, onSave }: { tx: any, onClose: () => void, onSave: (updated: any) => void }) {
+  const [data, setData] = useState({ ...tx });
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/transactions/${tx._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: data.title,
+          amount: data.amount,
+          type: data.type,
+          category: data.category,
+          paymentMethod: data.paymentMethod,
+          transactionDate: data.transactionDate,
+          notes: data.notes,
+        }),
+        credentials: "include",
+      });
+      if (res.ok) {
+        toast.success("Transaction updated successfully");
+        onSave(data);
+      } else {
+        const json = await res.json();
+        toast.error(json.message || "Failed to update");
+      }
+    } catch (err) {
+      toast.error("Error updating transaction");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={true} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Edit Transaction</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label>Title</Label>
+            <Input value={data.title} onChange={e => setData({...data, title: e.target.value})} required className="mt-1" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Amount</Label>
+              <Input type="number" step="0.01" min="0" value={data.amount} onChange={e => setData({...data, amount: Number(e.target.value)})} required className="mt-1" />
+            </div>
+            <div>
+              <Label>Date</Label>
+              <Input type="date" value={new Date(data.transactionDate).toISOString().slice(0, 10)} onChange={e => setData({...data, transactionDate: e.target.value})} required className="mt-1" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Type</Label>
+              <Select value={data.type} onValueChange={v => setData({...data, type: v})}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="expense">Expense</SelectItem>
+                  <SelectItem value="income">Income</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Category</Label>
+              <Select value={data.category} onValueChange={v => setData({...data, category: v})}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {CATEGORIES.map((c) => <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div>
+            <Label>Payment Method</Label>
+            <Select value={data.paymentMethod || "card"} onValueChange={v => setData({...data, paymentMethod: v})}>
+              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="card">Card</SelectItem>
+                <SelectItem value="cash">Cash</SelectItem>
+                <SelectItem value="bank">Bank transfer</SelectItem>
+                <SelectItem value="wallet">Wallet</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Notes (optional)</Label>
+            <Input value={data.notes || ""} onChange={e => setData({...data, notes: e.target.value})} className="mt-1" />
+          </div>
+          <div className="flex justify-end gap-2 pt-4">
+            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+            <Button type="submit" disabled={saving} className="gradient-primary text-primary-foreground">
+              {saving ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
